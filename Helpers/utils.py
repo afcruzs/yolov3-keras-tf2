@@ -29,7 +29,7 @@ def get_logger():
     logger.setLevel(logging.DEBUG)
     file_title = os.path.join('Logs', 'session.log')
     if 'Logs' not in os.listdir():
-        file_title = f'{os.path.join("..", file_title)}'
+        file_title = f'{os.path.join(os.getcwd(), file_title)}'
     file_handler = handlers.RotatingFileHandler(file_title, backupCount=10)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
