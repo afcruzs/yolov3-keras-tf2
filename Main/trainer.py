@@ -45,6 +45,7 @@ class Trainer(V3Model):
         max_boxes=100,
         iou_threshold=0.5,
         score_threshold=0.5,
+        image_folder=None
     ):
         """
         Initialize training.
@@ -77,9 +78,7 @@ class Trainer(V3Model):
         )
         self.train_tf_record = train_tf_record
         self.valid_tf_record = valid_tf_record
-        self.image_folder = (
-            Path(os.path.join('..', 'Data', 'Photos')).absolute().resolve()
-        )
+        self.image_folder = (Path(os.path.join('..', 'Data', 'Photos')).absolute().resolve()) if image_folder is None else image_folder
         self.image_width = image_width
         self.image_height = image_height
 
@@ -183,7 +182,7 @@ class Trainer(V3Model):
             raise ValueError('dataset_name not found in new_dataset_conf')
         labels_frame = self.get_adjusted_labels(new_dataset_conf)
         if new_dataset_conf.get('augmentation'):
-            labels_frame = self.augment_photos(new_dataset_conf)
+            labels_frame = self.augment_photos(new_dataset_conf, self.image_folder)
         return labels_frame
 
     def initialize_dataset(self, tf_record, batch_size, shuffle_buffer=512):
@@ -214,7 +213,7 @@ class Trainer(V3Model):
         return dataset
 
     @staticmethod
-    def augment_photos(new_dataset_conf):
+    def augment_photos(new_dataset_conf, image_folder):
         """
         Augment photos in self.image_paths
         Args:
@@ -244,7 +243,7 @@ class Trainer(V3Model):
         if not relative_labels:
             raise ValueError(f'No "relative_labels" found in new_dataset_conf')
         augment = DataAugment(
-            relative_labels, augmentations, workers or 32, coordinate_labels
+            relative_labels, augmentations, workers or 32, coordinate_labels, image_folder=image_folder
         )
         augment.create_sequences(sequences)
         return augment.augment_photos_folder(
